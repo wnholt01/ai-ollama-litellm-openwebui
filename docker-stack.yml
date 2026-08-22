@@ -43,7 +43,7 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     configs:
-      - source: litellm_config_v2
+      - source: litellm_config
         target: /app/config.yaml
     ports:
       - "4000:4000"          # API + admin UI: http://<any-swarm-node>:4000/ui
@@ -104,7 +104,8 @@ services:
     volumes:
       - /gluster/appdata/ai/mcpo-auth:/root/.mcp-auth
     ports:
-      - "8000:8000"          # needed once for the OAuth callback + Open WebUI tool registration
+      - "8100:8000"          # 8000 is taken by Portainer on the swarm ingress
+      - "3334:3334"          # one-time OAuth callback; remove this line once authorized
     networks: [ai]
     deploy: *worker-deploy
     logging: *graylog
@@ -135,7 +136,7 @@ networks:
     driver: overlay
 
 configs:
-  litellm_config_v2:
+  litellm_config:
     file: ./litellm-config.yaml
   wake_proxy:
     file: ./wake-proxy.py
