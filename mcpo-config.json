@@ -6,12 +6,9 @@
         "-y",
         "mcp-remote",
         "https://gmailmcp.googleapis.com/mcp/v1",
-        "--client-id",
-        "${GOOGLE_OAUTH_CLIENT_ID}",
-        "--client-secret",
-        "${GOOGLE_OAUTH_CLIENT_SECRET}",
-        "--callback-port",
-        "3334"
+        "3334",
+        "--static-oauth-client-info",
+        "{\"client_id\":\"${GOOGLE_OAUTH_CLIENT_ID}\",\"client_secret\":\"${GOOGLE_OAUTH_CLIENT_SECRET}\"}"
       ],
       "env": {
         "GOOGLE_OAUTH_CLIENT_ID": "${GOOGLE_OAUTH_CLIENT_ID}",
