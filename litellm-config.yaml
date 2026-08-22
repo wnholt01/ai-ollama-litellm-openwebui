@@ -28,6 +28,7 @@ model_list:
       api_base: http://wake-proxy:11434
       keep_alive: "2m"
       timeout: 120
+      think: false
 
   # ---- Local embeddings: CPU on the swarm (never wakes the desktop) ----
   - model_name: local-embed
