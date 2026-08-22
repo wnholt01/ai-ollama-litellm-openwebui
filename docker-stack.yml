@@ -96,6 +96,8 @@ services:
     command: ["--config", "/app/config.json", "--api-key", "${MCPO_KEY}", "--port", "8000"]
     environment:
       MCP_REMOTE_CONFIG_DIR: /root/.mcp-auth      # where mcp-remote caches OAuth tokens
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID}
+      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET}
     configs:
       - source: mcpo_config
         target: /app/config.json
