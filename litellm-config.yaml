@@ -1,0 +1,71 @@
+# Aliases on the left are what appear in Open WebUI's model picker.
+# Verify model tags against ollama.com/library and the provider docs before deploying.
+
+model_list:
+  # ---- Local generation: 5090 desktop via wake-proxy ----
+  # keep_alive is short so the 5090 frees VRAM quickly after each burst of requests.
+  - model_name: local-chat
+    litellm_params:
+      model: ollama_chat/qwen3.6:35b-a3b
+      api_base: http://wake-proxy:11434
+      keep_alive: "2m"
+      timeout: 180
+  - model_name: local-coder
+    litellm_params:
+      model: ollama_chat/qwen3-coder:30b
+      api_base: http://wake-proxy:11434
+      keep_alive: "2m"
+      timeout: 180
+  - model_name: local-vision
+    litellm_params:
+      model: ollama_chat/gemma4:12b
+      api_base: http://wake-proxy:11434
+      keep_alive: "2m"
+      timeout: 180
+  - model_name: local-fast             # Home Assistant Assist
+    litellm_params:
+      model: ollama_chat/qwen3:8b
+      api_base: http://wake-proxy:11434
+      keep_alive: "2m"
+      timeout: 120
+
+  # ---- Local embeddings: CPU on the swarm (never wakes the desktop) ----
+  - model_name: local-embed
+    litellm_params:
+      model: ollama/nomic-embed-text
+      api_base: http://ollama-cpu:11434
+
+  # ---- Frontier ----
+  - model_name: claude
+    litellm_params:
+      model: anthropic/claude-sonnet-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: claude-opus
+    litellm_params:
+      model: anthropic/claude-opus-4-8
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: gemini
+    litellm_params:
+      model: gemini/gemini-3.6-flash
+      api_key: os.environ/GEMINI_API_KEY
+  - model_name: gemini-pro
+    litellm_params:
+      model: gemini/gemini-3.6-pro
+      api_key: os.environ/GEMINI_API_KEY
+
+router_settings:
+  # Desktop asleep-and-won't-wake, stopped for gaming, or otherwise unreachable -> frontier
+  fallbacks:
+    - local-chat: ["gemini"]
+    - local-coder: ["claude"]
+    - local-vision: ["gemini"]
+    - local-fast: ["gemini"]
+  num_retries: 1
+
+litellm_settings:
+  drop_params: true
+  max_budget: 20           # USD per 30 days across frontier keys
+  budget_duration: 30d
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

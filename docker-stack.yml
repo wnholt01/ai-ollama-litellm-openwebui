@@ -1,0 +1,119 @@
+# Portainer / Docker Swarm stack: LiteLLM + Postgres + Open WebUI + wake-proxy + ollama-cpu (embeddings)
+# Generation runs on the Windows desktop's RTX 5090 (native Ollama) — NOT in the swarm.
+# Persistent data lives on GlusterFS under /gluster/appdata/ai/ so services can float between workers.
+# Before first deploy, on any node:
+#   sudo mkdir -p /gluster/appdata/ai/{litellm-db,open-webui,ollama-cpu}
+#   sudo chown -R 999:999 /gluster/appdata/ai/litellm-db
+
+version: "3.8"
+
+x-deploy: &worker-deploy
+  replicas: 1
+  placement:
+    constraints: [node.role == worker]
+  restart_policy:
+    condition: any
+
+x-logging: &graylog
+  driver: "gelf"
+  options:
+    gelf-address: udp://192.168.1.79:12201
+    tag: "{{.Name}}"
+
+services:
+  litellm-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: litellm
+    volumes:
+      - /gluster/appdata/ai/litellm-db:/var/lib/postgresql/data
+    networks: [ai]
+    deploy: *worker-deploy
+    logging: *graylog
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    environment:
+      DATABASE_URL: postgresql://litellm:${POSTGRES_PASSWORD}@litellm-db:5432/litellm
+      STORE_MODEL_IN_DB: "True"
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    configs:
+      - source: litellm_config
+        target: /app/config.yaml
+    ports:
+      - "4000:4000"          # API + admin UI: http://<any-swarm-node>:4000/ui
+    networks: [ai]
+    deploy: *worker-deploy
+    logging: *graylog
+
+  wake-proxy:
+    # Sits between LiteLLM and the desktop's Ollama. If the desktop doesn't answer it
+    # fires a Home Assistant webhook (Wake-on-LAN), waits for Ollama, then forwards.
+    # If Ollama is deliberately stopped (gaming), the wake still fires harmlessly, the
+    # wait times out, and LiteLLM falls back to Claude/Gemini.
+    image: python:3.12-slim
+    command: sh -c "pip install --quiet aiohttp && python /app/proxy.py"
+    environment:
+      OLLAMA_URL: http://${DESKTOP_IP}:11434
+      HA_WEBHOOK_URL: ${HA_WEBHOOK_URL}
+      WAKE_TIMEOUT_SEC: "90"
+    configs:
+      - source: wake_proxy
+        target: /app/proxy.py
+    networks: [ai]
+    deploy: *worker-deploy
+    logging: *graylog
+
+  ollama-cpu:
+    # CPU-only Ollama for embeddings (RAG indexing / knowledge-base search) so the
+    # desktop is never woken for anything but text generation. Do not pull chat models here.
+    image: ollama/ollama:latest
+    environment:
+      OLLAMA_KEEP_ALIVE: "-1"
+      OLLAMA_NUM_PARALLEL: "4"
+    volumes:
+      - /gluster/appdata/ai/ollama-cpu:/root/.ollama
+    networks: [ai]
+    deploy:
+      <<: *worker-deploy
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4G
+    logging: *graylog
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    environment:
+      OPENAI_API_BASE_URL: http://litellm:4000/v1
+      OPENAI_API_KEY: ${LITELLM_MASTER_KEY}
+      ENABLE_OLLAMA_API: "false"
+      WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
+      ENABLE_SIGNUP: "${ENABLE_SIGNUP}"       # true for first login, then false
+      ENABLE_WEBSOCKET_SUPPORT: "true"        # needed for Conduit / mobile clients
+      DEFAULT_MODELS: local-chat
+      RAG_EMBEDDING_ENGINE: ollama
+      RAG_EMBEDDING_MODEL: nomic-embed-text
+      RAG_OLLAMA_BASE_URL: http://ollama-cpu:11434
+    volumes:
+      - /gluster/appdata/ai/open-webui:/app/backend/data
+    ports:
+      - "3000:8080"
+    networks: [ai]
+    deploy: *worker-deploy
+    logging: *graylog
+
+networks:
+  ai:
+    driver: overlay
+
+configs:
+  litellm_config:
+    file: ./litellm-config.yaml
+  wake_proxy:
+    file: ./wake-proxy.py
