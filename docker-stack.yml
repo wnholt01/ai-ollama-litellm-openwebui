@@ -43,7 +43,7 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
     configs:
-      - source: litellm_config
+      - source: litellm_config_v2
         target: /app/config.yaml
     ports:
       - "4000:4000"          # API + admin UI: http://<any-swarm-node>:4000/ui
@@ -136,7 +136,7 @@ networks:
     driver: overlay
 
 configs:
-  litellm_config:
+  litellm_config_v2:
     file: ./litellm-config.yaml
   wake_proxy:
     file: ./wake-proxy.py
