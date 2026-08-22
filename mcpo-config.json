@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "gmail": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://gmailmcp.googleapis.com/mcp/v1",
+        "--client-id", "REPLACE_WITH_OAUTH_CLIENT_ID",
+        "--client-secret", "REPLACE_WITH_OAUTH_CLIENT_SECRET",
+        "--callback-port", "3334"
+      ]
+    }
+  }
+}
