@@ -99,7 +99,7 @@ services:
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID}
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET}
     configs:
-      - source: mcpo_config
+      - source: mcpo_config_v2
         target: /app/config.json
     volumes:
       - /gluster/appdata/ai/mcpo-auth:/root/.mcp-auth
@@ -140,5 +140,5 @@ configs:
     file: ./litellm-config.yaml
   wake_proxy:
     file: ./wake-proxy.py
-  mcpo_config:
+  mcpo_config_v2:
     file: ./mcpo-config.json
