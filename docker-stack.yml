@@ -2,7 +2,7 @@
 # Generation runs on the Windows desktop's RTX 5090 (native Ollama) — NOT in the swarm.
 # Persistent data lives on GlusterFS under /gluster/appdata/ai/ so services can float between workers.
 # Before first deploy, on any node:
-#   sudo mkdir -p /gluster/appdata/ai/{litellm-db,open-webui,ollama-cpu}
+#   sudo mkdir -p /gluster/appdata/ai/{litellm-db,open-webui,ollama-cpu,mcpo-auth}
 #   sudo chown -R 999:999 /gluster/appdata/ai/litellm-db
 
 version: "3.8"
@@ -87,6 +87,26 @@ services:
           memory: 4G
     logging: *graylog
 
+  mcpo:
+    # Bridges MCP servers to OpenAPI so Open WebUI can call them as Tools.
+    # Gmail is Google's REMOTE MCP server, reached via the `mcp-remote` shim which
+    # handles the OAuth flow. The OAuth token cache lives on Gluster so it survives
+    # restarts and follows the service between workers.
+    image: ghcr.io/open-webui/mcpo:main
+    command: ["--config", "/app/config.json", "--api-key", "${MCPO_KEY}", "--port", "8000"]
+    environment:
+      MCP_REMOTE_CONFIG_DIR: /root/.mcp-auth      # where mcp-remote caches OAuth tokens
+    configs:
+      - source: mcpo_config
+        target: /app/config.json
+    volumes:
+      - /gluster/appdata/ai/mcpo-auth:/root/.mcp-auth
+    ports:
+      - "8000:8000"          # needed once for the OAuth callback + Open WebUI tool registration
+    networks: [ai]
+    deploy: *worker-deploy
+    logging: *graylog
+
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     environment:
@@ -117,3 +137,5 @@ configs:
     file: ./litellm-config.yaml
   wake_proxy:
     file: ./wake-proxy.py
+  mcpo_config:
+    file: ./mcpo-config.json
