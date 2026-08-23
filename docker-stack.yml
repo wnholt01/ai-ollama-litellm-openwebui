@@ -2,7 +2,7 @@
 # Generation runs on the Windows desktop's RTX 5090 (native Ollama) — NOT in the swarm.
 # Persistent data lives on GlusterFS under /gluster/appdata/ai/ so services can float between workers.
 # Before first deploy, on any node:
-#   sudo mkdir -p /gluster/appdata/ai/{litellm-db,open-webui,ollama-cpu,mcpo-auth}
+#   sudo mkdir -p /gluster/appdata/ai/{litellm-db,open-webui,ollama-cpu,mcpo-auth,mcpo}
 #   sudo chown -R 999:999 /gluster/appdata/ai/litellm-db
 
 version: "3.8"
@@ -96,12 +96,10 @@ services:
     command: ["--config", "/app/config.json", "--api-key", "${MCPO_KEY}", "--port", "8000"]
     environment:
       MCP_REMOTE_CONFIG_DIR: /root/.mcp-auth      # where mcp-remote caches OAuth tokens
-      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID}
-      GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET}
-    configs:
-      - source: mcpo_config_v2
-        target: /app/config.json
     volumes:
+      # config.json holds the real OAuth client id/secret and lives ONLY on Gluster,
+      # never in Git. See mcpo-config.json.example for the shape.
+      - /gluster/appdata/ai/mcpo/config.json:/app/config.json:ro
       - /gluster/appdata/ai/mcpo-auth:/root/.mcp-auth
     ports:
       - "8100:8000"          # 8000 is taken by Portainer on the swarm ingress
@@ -140,5 +138,3 @@ configs:
     file: ./litellm-config.yaml
   wake_proxy:
     file: ./wake-proxy.py
-  mcpo_config_v2:
-    file: ./mcpo-config.json
