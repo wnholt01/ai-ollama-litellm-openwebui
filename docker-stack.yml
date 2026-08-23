@@ -87,27 +87,6 @@ services:
           memory: 4G
     logging: *graylog
 
-  mcpo:
-    # Bridges MCP servers to OpenAPI so Open WebUI can call them as Tools.
-    # Gmail is Google's REMOTE MCP server, reached via the `mcp-remote` shim which
-    # handles the OAuth flow. The OAuth token cache lives on Gluster so it survives
-    # restarts and follows the service between workers.
-    image: ghcr.io/open-webui/mcpo:main
-    command: ["--config", "/app/config.json", "--api-key", "${MCPO_KEY}", "--port", "8000"]
-    environment:
-      MCP_REMOTE_CONFIG_DIR: /root/.mcp-auth      # where mcp-remote caches OAuth tokens
-    volumes:
-      # config.json holds the real OAuth client id/secret and lives ONLY on Gluster,
-      # never in Git. See mcpo-config.json.example for the shape.
-      - /gluster/appdata/ai/mcpo/config.json:/app/config.json:ro
-      - /gluster/appdata/ai/mcpo-auth:/root/.mcp-auth
-    ports:
-      - "8100:8000"          # 8000 is taken by Portainer on the swarm ingress
-      - "3334:3334"          # one-time OAuth callback; remove this line once authorized
-    networks: [ai]
-    deploy: *worker-deploy
-    logging: *graylog
-
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     environment:
