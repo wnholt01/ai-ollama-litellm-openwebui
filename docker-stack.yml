@@ -96,6 +96,7 @@ services:
       WEBUI_SECRET_KEY: ${WEBUI_SECRET_KEY}
       ENABLE_SIGNUP: "${ENABLE_SIGNUP}"       # true for first login, then false
       ENABLE_WEBSOCKET_SUPPORT: "true"        # needed for Conduit / mobile clients
+      WEBUI_URL: ${WEBUI_URL}
       DEFAULT_MODELS: local-chat
       RAG_EMBEDDING_ENGINE: ollama
       RAG_EMBEDDING_MODEL: nomic-embed-text
