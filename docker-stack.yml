@@ -87,6 +87,15 @@ services:
           memory: 4G
     logging: *graylog
 
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - /gluster/appdata/ai/redis:/data
+    networks: [ai]
+    deploy: *worker-deploy
+    logging: *graylog
+
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     environment:
