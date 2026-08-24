@@ -39,25 +39,17 @@ model_list:
   # ---- Frontier ----
   - model_name: claude
     litellm_params:
-      model: anthropic/claude-sonnet-5
-      api_key: os.environ/ANTHROPIC_API_KEY
-  - model_name: claude-opus
-    litellm_params:
-      model: anthropic/claude-opus-4-8
+      model: anthropic/claude-opus-5
       api_key: os.environ/ANTHROPIC_API_KEY
   - model_name: gemini
     litellm_params:
       model: gemini/gemini-3.6-flash
       api_key: os.environ/GEMINI_API_KEY
-  - model_name: gemini-pro
-    litellm_params:
-      model: gemini/gemini-3.6-pro
-      api_key: os.environ/GEMINI_API_KEY
 
 router_settings:
   # Desktop asleep-and-won't-wake, stopped for gaming, or otherwise unreachable -> frontier
   fallbacks:
-    - local-chat: ["gemini"]
+    - local-chat: ["claude"]
     - local-coder: ["claude"]
     - local-vision: ["gemini"]
     - local-fast: ["gemini"]
