@@ -59,6 +59,9 @@ litellm_settings:
   drop_params: true
   max_budget: 20           # USD per 30 days across frontier keys
   budget_duration: 30d
+  cache: true
+  cache_params:
+    type: redis
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
