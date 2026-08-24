@@ -42,8 +42,10 @@ services:
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
     configs:
-      - source: litellm_config_v3
+      - source: litellm_config_v4
         target: /app/config.yaml
     ports:
       - "4000:4000"          # API + admin UI: http://<any-swarm-node>:4000/ui
@@ -123,7 +125,7 @@ networks:
     driver: overlay
 
 configs:
-  litellm_config_v3:
+  litellm_config_v4:
     file: ./litellm-config.yaml
   wake_proxy:
     file: ./wake-proxy.py
