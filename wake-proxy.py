@@ -1,19 +1,28 @@
 """
-Reverse proxy: LiteLLM / Open WebUI -> (this) -> Ollama on the 5090 desktop.
-If Ollama doesn't respond, POST to a Home Assistant webhook that sends Wake-on-LAN,
-poll until Ollama is up (or time out), then forward the request.
+Reverse proxy: LiteLLM / Open WebUI -> (this) -> a service on the 5090 desktop.
+If the upstream doesn't respond, POST to a Home Assistant webhook that sends Wake-on-LAN,
+poll until it's up (or time out), then forward the request.
+
+Generic despite the naming: set UPSTREAM_URL (alias OLLAMA_URL) to any http backend.
+Used twice in this stack — once for Ollama (11434) and once for ComfyUI (8188).
+HEALTH_PATH is the cheap GET used to test liveness:
+  Ollama  -> /api/tags
+  ComfyUI -> /system_stats
+LISTEN_PORT is the port this proxy serves on inside its container.
 """
 import asyncio, os, time
 from aiohttp import web, ClientSession, ClientTimeout, ClientConnectorError
 
-OLLAMA = os.environ["OLLAMA_URL"].rstrip("/")
+OLLAMA = os.environ.get("UPSTREAM_URL", os.environ.get("OLLAMA_URL", "")).rstrip("/")
+HEALTH_PATH = os.environ.get("HEALTH_PATH", "/api/tags")
+LISTEN_PORT = int(os.environ.get("LISTEN_PORT", "11434"))
 HA_WEBHOOK = os.environ.get("HA_WEBHOOK_URL")
 WAKE_TIMEOUT = int(os.environ.get("WAKE_TIMEOUT_SEC", "90"))
 _last_wake = 0.0
 
 async def ollama_up(session):
     try:
-        async with session.get(f"{OLLAMA}/api/tags", timeout=ClientTimeout(total=2)) as r:
+        async with session.get(f"{OLLAMA}{HEALTH_PATH}", timeout=ClientTimeout(total=2)) as r:
             return r.status == 200
     except Exception:
         return False
@@ -33,7 +42,7 @@ async def ensure_awake(session):
     while time.time() < deadline:
         await asyncio.sleep(3)
         if await ollama_up(session):
-            print("wake-proxy: desktop is up", flush=True)
+            print("wake-proxy: upstream is up", flush=True)
             return True
     print("wake-proxy: desktop did not come up; caller will fall back", flush=True)
     return False
@@ -69,4 +78,4 @@ app = web.Application(client_max_size=256 * 1024**2)
 app.on_startup.append(on_startup)
 app.on_cleanup.append(on_cleanup)
 app.router.add_route("*", "/{tail:.*}", handle)
-web.run_app(app, host="0.0.0.0", port=11434)
+web.run_app(app, host="0.0.0.0", port=LISTEN_PORT)
