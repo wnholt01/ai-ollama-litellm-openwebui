@@ -117,10 +117,12 @@ services:
     logging: *graylog
 
   headroom:
-    image: ghcr.io/headroom-ai/headroom:latest    # verify the actual image name in their docs
+    image: python:3.12-slim
+    command: sh -c "pip install --quiet 'headroom-ai[proxy]==0.27.0' && headroom proxy --host 0.0.0.0 --port 8787"
     environment:
-      HEADROOM_COMPRESS_ALLOW_REMOTE: "1"
+      HEADROOM_TELEMETRY: "off"
       HEADROOM_COMPRESS_USER_MESSAGES: "1"
+      HEADROOM_COMPRESS_ALLOW_REMOTE: "1"
     networks: [ai]
     deploy: *worker-deploy
     logging: *graylog
