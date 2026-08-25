@@ -61,16 +61,34 @@ services:
     image: python:3.12-slim
     command: sh -c "pip install --quiet aiohttp && python /app/proxy.py"
     environment:
-      OLLAMA_URL: http://${DESKTOP_IP}:11434
+      UPSTREAM_URL: http://${DESKTOP_IP}:11434
+      HEALTH_PATH: /api/tags
+      LISTEN_PORT: "11434"
       HA_WEBHOOK_URL: ${HA_WEBHOOK_URL}
       WAKE_TIMEOUT_SEC: "90"
     configs:
-      - source: wake_proxy
+      - source: wake_proxy_v2
         target: /app/proxy.py
     networks: [ai]
     deploy: *worker-deploy
     logging: *graylog
 
+  wake-proxy-comfy:
+    image: python:3.12-slim
+    command: sh -c "pip install --quiet aiohttp && python /app/proxy.py"
+    environment:
+      UPSTREAM_URL: http://${DESKTOP_IP}:8188
+      HEALTH_PATH: /system_stats
+      LISTEN_PORT: "8188"
+      HA_WEBHOOK_URL: ${HA_WEBHOOK_URL}
+      WAKE_TIMEOUT_SEC: "120"
+    configs:
+      - source: wake_proxy_v2
+        target: /app/proxy.py
+    networks: [ai]
+    deploy: *worker-deploy
+    logging: *graylog
+  
   ollama-cpu:
     # CPU-only Ollama for embeddings (RAG indexing / knowledge-base search) so the
     # desktop is never woken for anything but text generation. Do not pull chat models here.
@@ -127,5 +145,5 @@ networks:
 configs:
   litellm_config_v4:
     file: ./litellm-config.yaml
-  wake_proxy:
+  wake_proxy_v2:
     file: ./wake-proxy.py
