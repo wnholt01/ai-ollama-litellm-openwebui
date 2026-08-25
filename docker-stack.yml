@@ -45,7 +45,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: "6379"
     configs:
-      - source: litellm_config_v4
+      - source: litellm_config_v5
         target: /app/config.yaml
     ports:
       - "4000:4000"          # API + admin UI: http://<any-swarm-node>:4000/ui
@@ -116,6 +116,15 @@ services:
     deploy: *worker-deploy
     logging: *graylog
 
+  headroom:
+    image: ghcr.io/headroom-ai/headroom:latest    # verify the actual image name in their docs
+    environment:
+      HEADROOM_COMPRESS_ALLOW_REMOTE: "1"
+      HEADROOM_COMPRESS_USER_MESSAGES: "1"
+    networks: [ai]
+    deploy: *worker-deploy
+    logging: *graylog
+    
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     environment:
@@ -143,7 +152,7 @@ networks:
     driver: overlay
 
 configs:
-  litellm_config_v4:
+  litellm_config_v5:
     file: ./litellm-config.yaml
   wake_proxy_v2:
     file: ./wake-proxy.py
