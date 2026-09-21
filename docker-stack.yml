@@ -1,5 +1,6 @@
 # Portainer / Docker Swarm stack: LiteLLM + Postgres + Open WebUI + wake-proxy + ollama-cpu (embeddings)
-# Generation runs on the Windows desktop's RTX 5090 (native Ollama) — NOT in the swarm.
+# Generation: local-chat runs on the T420's RTX 3090 (Unraid, always on, 192.168.1.149), failing over to
+# the Windows desktop's RTX 5090 via wake-proxy. Other local models use the 5090 only — NOT in the swarm.
 # Persistent data lives on GlusterFS under /gluster/appdata/ai/ so services can float between workers.
 # Before first deploy, on any node:
 #   sudo mkdir -p /gluster/appdata/ai/{litellm-db,open-webui,ollama-cpu,mcpo-auth,mcpo}
@@ -44,8 +45,9 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY}
       REDIS_HOST: redis
       REDIS_PORT: "6379"
+      T420_OLLAMA_URL: http://192.168.1.149:11434
     configs:
-      - source: litellm_config_v5
+      - source: litellm_config_v6
         target: /app/config.yaml
     ports:
       - "4000:4000"          # API + admin UI: http://<any-swarm-node>:4000/ui
@@ -88,7 +90,7 @@ services:
     networks: [ai]
     deploy: *worker-deploy
     logging: *graylog
-  
+
   ollama-cpu:
     # CPU-only Ollama for embeddings (RAG indexing / knowledge-base search) so the
     # desktop is never woken for anything but text generation. Do not pull chat models here.
@@ -126,7 +128,7 @@ services:
     networks: [ai]
     deploy: *worker-deploy
     logging: *graylog
-    
+
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     environment:
@@ -154,7 +156,7 @@ networks:
     driver: overlay
 
 configs:
-  litellm_config_v5:
+  litellm_config_v6:
     file: ./litellm-config.yaml
   wake_proxy_v2:
     file: ./wake-proxy.py
