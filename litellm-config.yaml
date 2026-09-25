@@ -14,33 +14,11 @@ model_list:
       stream_timeout: 60              # fail over quickly if the T420 is off
   - model_name: local-chat
     litellm_params:
-      model: ollama_chat/qwen3.6:35b-a3b
+      model: ollama_chat/batiai/qwen3.6-27b:q6
       api_base: http://wake-proxy:11434
       order: 2
       keep_alive: "2m"
       timeout: 180                    # must exceed the wake-proxy's 90s wake window
-
-  # ---- Local generation: 5090 desktop via wake-proxy ----
-  # keep_alive is short so the 5090 frees VRAM quickly after each burst of requests.
-  - model_name: local-coder
-    litellm_params:
-      model: ollama_chat/qwen3-coder:30b
-      api_base: http://wake-proxy:11434
-      keep_alive: "2m"
-      timeout: 180
-  - model_name: local-vision
-    litellm_params:
-      model: ollama_chat/gemma4:12b
-      api_base: http://wake-proxy:11434
-      keep_alive: "2m"
-      timeout: 180
-  - model_name: local-fast             # Home Assistant Assist
-    litellm_params:
-      model: ollama_chat/qwen3:8b
-      api_base: http://wake-proxy:11434
-      keep_alive: "2m"
-      timeout: 120
-      think: false
 
   # ---- Local embeddings: CPU on the swarm (never wakes the desktop) ----
   - model_name: local-embed
@@ -71,9 +49,6 @@ router_settings:
   # Everything else: desktop unreachable or stopped for gaming -> frontier
   fallbacks:
     - local-chat: ["claude"]
-    - local-coder: ["claude"]
-    - local-vision: ["gemini"]
-    - local-fast: ["gemini"]
   num_retries: 1
   cooldown_time: 30
   allowed_fails: 1
