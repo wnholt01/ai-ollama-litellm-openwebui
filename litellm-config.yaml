@@ -39,7 +39,7 @@ model_list:
   # ---- Hermes Agents ----    
   - model_name: hermes-main            # 3090: always on, the default
     litellm_params:
-      model: ollama_chat/batiai/qwen3.6-35b:iq4
+      model: ollama_chat/qwen3.6-35b-iq4-tools
       api_base: http://192.168.1.149:11434
       timeout: 300
     model_info:
