@@ -14,7 +14,7 @@ model_list:
       stream_timeout: 60              # fail over quickly if the T420 is off
   - model_name: local-chat
     litellm_params:
-      model: ollama_chat/batiai/qwen3.6-27b:q6
+      model: ollama_chat/qwen3.6-35b-128k
       api_base: http://wake-proxy:11434
       order: 2
       keep_alive: "2m"
