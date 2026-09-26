@@ -66,8 +66,8 @@ router_settings:
   # Everything else: desktop unreachable or stopped for gaming -> frontier
   fallbacks:
     - local-chat: ["claude"]
-    - {"hermes-main": ["hermes-5090"]}   # 3090 down → wake the 5090
-    - {"hermes-5090": ["hermes-main"]}   # 5090 unavailable → 3090 takes over
+    - hermes-main: ["hermes-5090"]   # 3090 down → wake the 5090
+    - hermes-5090: ["hermes-main"]   # 5090 unavailable → 3090 takes over
 
   num_retries: 1
   cooldown_time: 30
