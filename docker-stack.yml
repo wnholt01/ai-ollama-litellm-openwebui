@@ -47,7 +47,7 @@ services:
       REDIS_PORT: "6379"
       T420_OLLAMA_URL: http://192.168.1.149:11434
     configs:
-      - source: litellm_config_v9
+      - source: litellm_config_v10
         target: /app/config.yaml
     ports:
       - "4000:4000"          # API + admin UI: http://<any-swarm-node>:4000/ui
@@ -156,7 +156,7 @@ networks:
     driver: overlay
 
 configs:
-  litellm_config_v9:
+  litellm_config_v10:
     file: ./litellm-config.yaml
   wake_proxy_v2:
     file: ./wake-proxy.py
