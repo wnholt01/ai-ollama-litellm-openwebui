@@ -6,7 +6,7 @@ model_list:
   # Same model_name + order = one entry in Open WebUI; LiteLLM picks the deployment.
   - model_name: local-chat
     litellm_params:
-      model: ollama_chat/qwen3.6-35b-iq4-tools
+      model: ollama_chat/qwen3.8:27b
       api_base: os.environ/T420_OLLAMA_URL
       order: 1
       max_parallel_requests: 2        # keep equal to OLLAMA_NUM_PARALLEL on the T420
@@ -14,7 +14,7 @@ model_list:
       stream_timeout: 60              # fail over quickly if the T420 is off
   - model_name: local-chat
     litellm_params:
-      model: ollama_chat/qwen3.6-35b-128k
+      model: ollama_chat/qwen3.8:27b
       api_base: http://wake-proxy:11434
       order: 2
       keep_alive: "2m"
@@ -40,7 +40,7 @@ model_list:
   # Local only by design: no frontier fallback.
   - model_name: local-hermes
     litellm_params:
-      model: ollama_chat/qwen3.6-35b-iq4-tools
+      model: ollama_chat/qwen3.8:27b
       api_base: os.environ/T420_OLLAMA_URL
       order: 1
       max_parallel_requests: 2        # shares the T420 with local-chat; see note below
@@ -50,7 +50,7 @@ model_list:
       supports_function_calling: true
   - model_name: local-hermes
     litellm_params:
-      model: ollama_chat/qwen3.6-35b-128k
+      model: ollama_chat/qwen3.8:27b
       api_base: http://wake-proxy:11434
       order: 2
       keep_alive: "2m"
