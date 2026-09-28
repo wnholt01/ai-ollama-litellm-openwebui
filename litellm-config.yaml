@@ -9,7 +9,7 @@ model_list:
       model: ollama_chat/qwen3.8:27b
       api_base: os.environ/T420_OLLAMA_URL
       order: 1
-      max_parallel_requests: 2        # keep equal to OLLAMA_NUM_PARALLEL on the T420
+      max_parallel_requests: 1        # keep equal to OLLAMA_NUM_PARALLEL on the T420
       timeout: 180
       stream_timeout: 60              # fail over quickly if the T420 is off
   - model_name: local-chat
@@ -43,7 +43,7 @@ model_list:
       model: ollama_chat/qwen3.8:27b
       api_base: os.environ/T420_OLLAMA_URL
       order: 1
-      max_parallel_requests: 2        # shares the T420 with local-chat; see note below
+      max_parallel_requests: 1        # shares the T420 with local-chat; see note below
       timeout: 300
       stream_timeout: 120             # agent prompts are large; allow for prefill before failing over
     model_info:
